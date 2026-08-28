@@ -8,7 +8,7 @@
 - 歷史快照：`data/009821/history/YYYY-MM-DD.json`
 - JSON Schema：`schema.json`
 
-每份快照的 `data_date` 同時適用於 NAV 與持股。`portfolio_tables` 保留官方每張持股／資產表的完整欄位與列，不假設所有 ETF 都只有股票。
+每份快照的 `data_date` 同時適用於 NAV 與持股。`previous_nav` 保存前一個官方 NAV，`nav.change` 與 `nav.change_percent` 則由兩日官方 NAV 計算。`portfolio_tables` 保留官方每張持股／資產表的完整欄位與列，不假設所有 ETF 都只有股票。
 
 ## 自動更新
 

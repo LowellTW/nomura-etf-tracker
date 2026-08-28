@@ -35,13 +35,14 @@ def update_fund(client, fund_id, output_dir, today=None):
     if not navs:
         raise NomuraError(f"{fund_id}: no NAV found between {start} and {today}")
 
-    for nav in navs:
+    for index, nav in enumerate(navs):
         try:
             assets = client.post(
                 "GetFundAssets",
                 {"FundID": fund_id, "SearchDate": nav["date"]},
             )
-            snapshot = build_snapshot(fund_id, nav, assets)
+            previous_nav = navs[index + 1] if index + 1 < len(navs) else None
+            snapshot = build_snapshot(fund_id, nav, previous_nav, assets)
             if used_nav_detail:
                 snapshot["source"]["endpoints"].append("GetFundNAV")
             fund_dir = output_dir / fund_id
@@ -70,4 +71,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

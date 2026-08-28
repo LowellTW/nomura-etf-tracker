@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal, ROUND_HALF_UP
 
 
 def _number(value, number_type=float):
@@ -42,7 +43,7 @@ def normalize_nav_detail(entries):
     )
 
 
-def build_snapshot(fund_id, nav, assets, fetched_at=None):
+def build_snapshot(fund_id, nav, previous_nav, assets, fetched_at=None):
     data = assets["Data"]
     fund_asset = data["FundAsset"]
     tables = []
@@ -61,8 +62,32 @@ def build_snapshot(fund_id, nav, assets, fetched_at=None):
     if nav["date"] != data_date:
         raise ValueError(f"NAV date {nav['date']} != holdings date {data_date}")
 
+    previous = (
+        {"date": previous_nav["date"], "value": previous_nav["value"]}
+        if previous_nav
+        else None
+    )
+    change = (
+        Decimal(str(nav["value"])) - Decimal(str(previous_nav["value"]))
+        if previous_nav and nav["value"] is not None and previous_nav["value"] is not None
+        else None
+    )
+    nav = {
+        **nav,
+        "change": float(change) if change is not None else None,
+        "change_percent": (
+            float(
+                (change / Decimal(str(previous_nav["value"])) * 100).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                )
+            )
+            if change is not None and previous_nav["value"] != 0
+            else None
+        ),
+    }
+
     return {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "fund_id": fund_id,
         "data_date": data_date,
         "fetched_at": fetched_at or datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -72,6 +97,7 @@ def build_snapshot(fund_id, nav, assets, fetched_at=None):
             "nav": _number(fund_asset.get("Nav")),
         },
         "nav": nav,
+        "previous_nav": previous,
         "portfolio_tables": tables,
         "source": {
             "provider": "Nomura Asset Management Taiwan",
@@ -79,4 +105,3 @@ def build_snapshot(fund_id, nav, assets, fetched_at=None):
             "endpoints": ["GetFundAssets", "GetFundNAVList"],
         },
     }
-

@@ -1,8 +1,8 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "fund_id": "009821",
   "data_date": "2026-08-27",
-  "fetched_at": "2026-08-28T15:21:08+00:00",
+  "fetched_at": "2026-08-28T15:39:06+00:00",
   "fund": {
     "aum_twd": 8611689275,
     "units": 535340000,
@@ -13,7 +13,13 @@
     "value": 16.09,
     "closing_price": 15.92,
     "premium_discount": -0.17,
-    "premium_discount_percent": -1.06
+    "premium_discount_percent": -1.06,
+    "change": 0.17,
+    "change_percent": 1.07
+  },
+  "previous_nav": {
+    "date": "2026-08-26",
+    "value": 15.92
   },
   "portfolio_tables": [
     {
