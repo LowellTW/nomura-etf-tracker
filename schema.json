@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schema.json",
+  "title": "Nomura ETF daily snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "fund_id", "data_date", "fetched_at", "fund", "nav", "portfolio_tables", "source"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "fund_id": { "type": "string", "pattern": "^[0-9A-Z]+$" },
+    "data_date": { "type": "string", "format": "date" },
+    "fetched_at": { "type": "string", "format": "date-time" },
+    "fund": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aum_twd", "units", "nav"],
+      "properties": {
+        "aum_twd": { "type": ["integer", "null"] },
+        "units": { "type": ["integer", "null"] },
+        "nav": { "type": ["number", "null"] }
+      }
+    },
+    "nav": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["date", "value", "closing_price", "premium_discount", "premium_discount_percent"],
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "value": { "type": ["number", "null"] },
+        "closing_price": { "type": ["number", "null"] },
+        "premium_discount": { "type": ["number", "null"] },
+        "premium_discount_percent": { "type": ["number", "null"] }
+      }
+    },
+    "portfolio_tables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "date", "columns", "rows"],
+        "properties": {
+          "title": { "type": "string" },
+          "date": { "type": "string", "format": "date" },
+          "columns": { "type": "array", "items": { "type": "string" } },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": { "type": ["string", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "api_base", "endpoints"],
+      "properties": {
+        "provider": { "type": "string" },
+        "api_base": { "type": "string", "format": "uri" },
+        "endpoints": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
+

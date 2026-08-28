@@ -1,0 +1,36 @@
+name: Update ETF data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "50 7 * * 1-5"
+      timezone: "Asia/Taipei"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-etf-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Test
+        run: PYTHONPATH=src python -m unittest discover -s tests
+      - name: Fetch and normalize
+        run: PYTHONPATH=src python -m nomura_tracker
+      - name: Commit changed snapshots
+        run: |
+          git add data
+          git diff --cached --quiet && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data: update ETF snapshots"
+          git push
+
