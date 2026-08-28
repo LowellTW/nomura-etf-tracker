@@ -43,4 +43,3 @@ class NomuraClient:
                     raise NomuraError(f"{endpoint}: {error}") from error
                 time.sleep(2**attempt)
         raise AssertionError("unreachable")
-
