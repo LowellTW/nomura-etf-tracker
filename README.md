@@ -12,9 +12,9 @@
 
 ## 自動更新
 
-`.github/workflows/update.yml` 會在週一至週五台灣時間 07:00 執行，也可在 GitHub 的 **Actions → Update ETF data → Run workflow** 手動觸發。GitHub 排程可能因平台負載稍晚啟動。
+`.github/workflows/update.yml` 會在週一至週五台灣時間 06:40 執行，也可在 GitHub 的 **Actions → Update ETF data → Run workflow** 手動觸發。GitHub 排程可能因平台負載稍晚啟動。
 
-程式以臺灣證券交易所官方開休市日曆判定前一個台灣工作日，並只接受該日期的野村資料。若 07:00 尚未發布，會每隔 20 分鐘重試，最多重試 6 次（另加首次執行，共最多 7 次，最晚約 09:00）；成功後立即停止，全部失敗則保留原有 `latest.json` 並將 workflow 標示為失敗。
+程式以臺灣證券交易所官方開休市日曆判定前一個台灣工作日，並只接受該日期的野村資料。若 06:40 尚未發布，會每隔 20 分鐘重試，最多重試 6 次（另加首次執行，共最多 7 次，最晚約 08:40）；成功後立即停止，全部失敗則保留原有 `latest.json` 並將 workflow 標示為失敗。
 
 工作流程會：
 
