@@ -1,9 +1,18 @@
 import unittest
+from datetime import date
 
+from nomura_tracker.__main__ import previous_business_day
 from nomura_tracker.normalize import build_snapshot, normalize_nav_list
 
 
 class NormalizeTest(unittest.TestCase):
+    def test_previous_taiwan_business_day_skips_holidays_and_weekend(self):
+        holidays = {date(2026, 9, 25), date(2026, 9, 28)}
+        self.assertEqual(
+            previous_business_day(date(2026, 9, 29), holidays),
+            date(2026, 9, 24),
+        )
+
     def test_same_date_snapshot_and_typed_fund_values(self):
         nav = normalize_nav_list(
             [
