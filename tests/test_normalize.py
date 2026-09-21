@@ -26,7 +26,7 @@ class NormalizeTest(unittest.TestCase):
             with patch(
                 "nomura_tracker.__main__.urllib.request.urlopen",
                 side_effect=URLError("offline"),
-            ):
+            ), patch("builtins.print"):
                 holidays = fetch_twse_holidays(cache_dir, date(2026, 9, 21))
 
         self.assertEqual(holidays, {date(2026, 9, 25)})
