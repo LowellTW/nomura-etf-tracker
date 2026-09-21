@@ -35,6 +35,7 @@ jobs:
           done
           exit 1
       - name: Commit changed snapshots
+        if: always()
         run: |
           git add data
           git diff --cached --quiet && exit 0

@@ -6,6 +6,8 @@
 
 - 最新資料：`data/009821/latest.json`
 - 歷史快照：`data/009821/history/YYYY-MM-DD.json`
+- 證交所休市表快取：`data/twse-calendar/latest.json`
+- 證交所休市表每日快照：`data/twse-calendar/history/YYYY-MM-DD.json`
 - JSON Schema：`schema.json`
 
 每份快照的 `data_date` 同時適用於 NAV 與持股。`previous_nav` 保存前一個官方 NAV，`nav.change` 與 `nav.change_percent` 則由兩日官方 NAV 計算。`portfolio_tables` 保留官方每張持股／資產表的完整欄位與列，不假設所有 ETF 都只有股票。
@@ -15,6 +17,8 @@
 `.github/workflows/update.yml` 會在週一至週五台灣時間 06:40 執行，也可在 GitHub 的 **Actions → Update ETF data → Run workflow** 手動觸發。GitHub 排程可能因平台負載稍晚啟動。
 
 程式以臺灣證券交易所官方開休市日曆判定前一個台灣工作日，並只接受該日期的野村資料。若 06:40 尚未發布，會每隔 20 分鐘重試，最多重試 6 次（另加首次執行，共最多 7 次，最晚約 08:40）；成功後立即停止，全部失敗則保留原有 `latest.json` 並將 workflow 標示為失敗。
+
+證交所休市表每天最多下載一次並保存快照；API 暫時異常時改讀最近一次成功快照，因此週一可沿用週五紀錄。即使野村資料最後仍未發布，當日成功下載的休市表快照也會照常 commit。
 
 工作流程會：
 

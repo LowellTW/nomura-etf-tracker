@@ -1,11 +1,36 @@
 import unittest
+import json
 from datetime import date
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
+from urllib.error import URLError
 
-from nomura_tracker.__main__ import previous_business_day
+from nomura_tracker.__main__ import fetch_twse_holidays, previous_business_day
 from nomura_tracker.normalize import build_snapshot, normalize_nav_list
 
 
 class NormalizeTest(unittest.TestCase):
+    def test_holiday_calendar_falls_back_to_latest_cache(self):
+        with TemporaryDirectory() as directory:
+            cache_dir = Path(directory)
+            (cache_dir / "latest.json").write_text(
+                json.dumps(
+                    {
+                        "snapshot_date": "2026-09-18",
+                        "entries": [{"Name": "中秋節", "Date": "1150925"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with patch(
+                "nomura_tracker.__main__.urllib.request.urlopen",
+                side_effect=URLError("offline"),
+            ):
+                holidays = fetch_twse_holidays(cache_dir, date(2026, 9, 21))
+
+        self.assertEqual(holidays, {date(2026, 9, 25)})
+
     def test_previous_taiwan_business_day_skips_holidays_and_weekend(self):
         holidays = {date(2026, 9, 25), date(2026, 9, 28)}
         self.assertEqual(
