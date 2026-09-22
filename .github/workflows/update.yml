@@ -5,6 +5,18 @@ on:
   schedule:
     - cron: "40 6 * * 1-5"
       timezone: "Asia/Taipei"
+    - cron: "0 7 * * 1-5"
+      timezone: "Asia/Taipei"
+    - cron: "20 7 * * 1-5"
+      timezone: "Asia/Taipei"
+    - cron: "40 7 * * 1-5"
+      timezone: "Asia/Taipei"
+    - cron: "0 8 * * 1-5"
+      timezone: "Asia/Taipei"
+    - cron: "20 8 * * 1-5"
+      timezone: "Asia/Taipei"
+    - cron: "40 8 * * 1-5"
+      timezone: "Asia/Taipei"
 
 permissions:
   contents: write
@@ -16,7 +28,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,15 +37,7 @@ jobs:
       - name: Test
         run: PYTHONPATH=src python -m unittest discover -s tests
       - name: Fetch and normalize
-        run: |
-          for attempt in {0..6}; do
-            PYTHONPATH=src python -m nomura_tracker && exit 0
-            if [ "$attempt" -lt 6 ]; then
-              echo "Target data not ready; retrying in 20 minutes ($((attempt + 1))/6)"
-              sleep 1200
-            fi
-          done
-          exit 1
+        run: PYTHONPATH=src python -m nomura_tracker
       - name: Commit changed snapshots
         if: always()
         run: |

@@ -73,6 +73,19 @@ def previous_business_day(today, holidays):
     return candidate
 
 
+def all_funds_current(fund_ids, output_dir, target_date):
+    try:
+        return all(
+            json.loads(
+                (output_dir / str(fund_id) / "latest.json").read_text(encoding="utf-8")
+            )["data_date"]
+            == target_date.isoformat()
+            for fund_id in fund_ids
+        )
+    except (OSError, KeyError, TypeError, json.JSONDecodeError):
+        return False
+
+
 def _atomic_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -133,9 +146,28 @@ def main():
     if not isinstance(fund_ids, list) or not fund_ids:
         raise SystemExit("funds.json must contain a non-empty JSON array")
 
-    client = NomuraClient()
     today = datetime.now(ZoneInfo("Asia/Taipei")).date()
+    try:
+        cached_calendar = json.loads(
+            (args.calendar_cache / "latest.json").read_text(encoding="utf-8")
+        )
+        cached_target = previous_business_day(
+            today, _holiday_dates(cached_calendar["entries"])
+        )
+    except (OSError, KeyError, TypeError, json.JSONDecodeError, ValueError):
+        pass
+    else:
+        if all_funds_current(fund_ids, args.output, cached_target):
+            print(f"All funds already current for {cached_target}; skipping")
+            return
+
     holidays = fetch_twse_holidays(args.calendar_cache, today)
+    target_date = previous_business_day(today, holidays)
+    if all_funds_current(fund_ids, args.output, target_date):
+        print(f"All funds already current for {target_date}; skipping")
+        return
+
+    client = NomuraClient()
     for fund_id in fund_ids:
         snapshot = update_fund(
             client, str(fund_id), args.output, today=today, holidays=holidays

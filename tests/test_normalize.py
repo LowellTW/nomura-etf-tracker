@@ -6,11 +6,33 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 from urllib.error import URLError
 
-from nomura_tracker.__main__ import fetch_twse_holidays, previous_business_day
+from nomura_tracker.__main__ import (
+    all_funds_current,
+    fetch_twse_holidays,
+    previous_business_day,
+)
 from nomura_tracker.normalize import build_snapshot, normalize_nav_list
 
 
 class NormalizeTest(unittest.TestCase):
+    def test_all_funds_current_requires_every_latest_snapshot(self):
+        with TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            for fund_id, data_date in (("one", "2026-09-21"), ("two", "2026-09-20")):
+                (output_dir / fund_id).mkdir()
+                (output_dir / fund_id / "latest.json").write_text(
+                    json.dumps({"data_date": data_date}), encoding="utf-8"
+                )
+
+            self.assertFalse(
+                all_funds_current(
+                    ["one", "two"], output_dir, date(2026, 9, 21)
+                )
+            )
+            self.assertTrue(
+                all_funds_current(["one"], output_dir, date(2026, 9, 21))
+            )
+
     def test_holiday_calendar_falls_back_to_latest_cache(self):
         with TemporaryDirectory() as directory:
             cache_dir = Path(directory)
