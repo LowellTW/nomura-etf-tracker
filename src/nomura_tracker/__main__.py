@@ -115,13 +115,24 @@ def update_fund(client, fund_id, output_dir, today=None, holidays=None):
         raise NomuraError(f"{fund_id}: no NAV found between {start} and {today}")
 
     index = next(
-        (index for index, nav in enumerate(navs) if nav["date"] == target_date.isoformat()),
+        (index for index, nav in enumerate(navs) if nav["date"] <= target_date.isoformat()),
         None,
     )
     if index is None:
-        raise NomuraError(f"{fund_id}: NAV for {target_date} is not available yet")
+        raise NomuraError(f"{fund_id}: no NAV on or before {target_date}")
 
     nav = navs[index]
+    try:
+        latest = json.loads(
+            (output_dir / fund_id / "latest.json").read_text(encoding="utf-8")
+        )
+        saved_date = date.fromisoformat(latest["data_date"])
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        saved_date = None
+    if saved_date and saved_date >= date.fromisoformat(nav["date"]):
+        print(f"{fund_id}: no newer official NAV through {target_date}; latest {nav['date']}")
+        return None
+
     assets = client.post(
         "GetFundAssets",
         {"FundID": fund_id, "SearchDate": nav["date"]},
@@ -172,7 +183,8 @@ def main():
         snapshot = update_fund(
             client, str(fund_id), args.output, today=today, holidays=holidays
         )
-        print(f"{fund_id}: {snapshot['data_date']}")
+        if snapshot:
+            print(f"{fund_id}: {snapshot['data_date']}")
 
 
 if __name__ == "__main__":

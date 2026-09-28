@@ -3,18 +3,59 @@ import json
 from datetime import date
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from urllib.error import URLError
 
 from nomura_tracker.__main__ import (
     all_funds_current,
     fetch_twse_holidays,
     previous_business_day,
+    update_fund,
 )
 from nomura_tracker.normalize import build_snapshot, normalize_nav_list
 
 
 class NormalizeTest(unittest.TestCase):
+    def test_missing_fund_nav_date_is_not_a_failed_update(self):
+        with TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            fund_dir = output_dir / "009821"
+            fund_dir.mkdir()
+            latest_path = fund_dir / "latest.json"
+            latest_path.write_text(
+                json.dumps({"data_date": "2026-09-23"}), encoding="utf-8"
+            )
+
+            client = Mock()
+            client.post.return_value = [{"DataDT": "2026/09/23", "Nav": "13.98"}]
+            with patch("builtins.print"):
+                result = update_fund(
+                    client,
+                    "009821",
+                    output_dir,
+                    today=date(2026, 9, 25),
+                )
+            self.assertIsNone(result)
+            self.assertEqual(client.post.call_count, 1)
+            self.assertEqual(
+                json.loads(latest_path.read_text(encoding="utf-8"))["data_date"],
+                "2026-09-23",
+            )
+
+            client.post.side_effect = lambda endpoint, payload: (
+                [
+                    {"DataDT": "2026/09/29", "Nav": "14.20"},
+                    {"DataDT": "2026/09/23", "Nav": "13.98"},
+                ]
+                if endpoint == "GetFundNAVList"
+                else {"Data": {"FundAsset": {"NavDate": "2026/09/29", "Nav": "14.20"}}}
+            )
+            snapshot = update_fund(
+                client, "009821", output_dir, today=date(2026, 9, 30)
+            )
+            self.assertEqual(snapshot["data_date"], "2026-09-29")
+            self.assertEqual(snapshot["previous_nav"]["date"], "2026-09-23")
+
     def test_all_funds_current_requires_every_latest_snapshot(self):
         with TemporaryDirectory() as directory:
             output_dir = Path(directory)
