@@ -1,6 +1,6 @@
 import unittest
 import json
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import Mock, patch
@@ -9,6 +9,7 @@ from urllib.error import URLError
 from nomura_tracker.__main__ import (
     all_funds_current,
     fetch_twse_holidays,
+    main,
     previous_business_day,
     update_fund,
 )
@@ -16,6 +17,18 @@ from nomura_tracker.normalize import build_snapshot, normalize_nav_list
 
 
 class NormalizeTest(unittest.TestCase):
+    def test_late_scheduled_run_skips_before_loading_files(self):
+        with patch.dict("os.environ", {"GITHUB_EVENT_NAME": "schedule"}), patch(
+            "nomura_tracker.__main__.datetime"
+        ) as clock, patch(
+            "sys.argv", ["nomura_tracker", "--funds", "__missing__.json"]
+        ), patch("builtins.print") as output:
+            clock.now.return_value = datetime(2026, 9, 28, 10, 0)
+            main()
+            output.assert_called_once_with(
+                "Scheduled update skipped at 10:00 Asia/Taipei (cutoff 10:00)"
+            )
+
     def test_missing_fund_nav_date_is_not_a_failed_update(self):
         with TemporaryDirectory() as directory:
             output_dir = Path(directory)

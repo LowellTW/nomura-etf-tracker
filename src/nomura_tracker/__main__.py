@@ -148,6 +148,11 @@ def update_fund(client, fund_id, output_dir, today=None, holidays=None):
 
 
 def main():
+    now = datetime.now(ZoneInfo("Asia/Taipei"))
+    if os.getenv("GITHUB_EVENT_NAME") == "schedule" and now.hour >= 10:
+        print(f"Scheduled update skipped at {now:%H:%M} Asia/Taipei (cutoff 10:00)")
+        return
+
     parser = argparse.ArgumentParser(description="Update Nomura ETF snapshots")
     parser.add_argument("--funds", default="funds.json", type=Path)
     parser.add_argument("--output", default="data", type=Path)
@@ -157,7 +162,7 @@ def main():
     if not isinstance(fund_ids, list) or not fund_ids:
         raise SystemExit("funds.json must contain a non-empty JSON array")
 
-    today = datetime.now(ZoneInfo("Asia/Taipei")).date()
+    today = now.date()
     try:
         cached_calendar = json.loads(
             (args.calendar_cache / "latest.json").read_text(encoding="utf-8")
