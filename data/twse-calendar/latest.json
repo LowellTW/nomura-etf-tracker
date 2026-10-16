@@ -1,6 +1,6 @@
 {
-  "snapshot_date": "2026-10-15",
-  "fetched_at": "2026-10-15T08:49:16+08:00",
+  "snapshot_date": "2026-10-16",
+  "fetched_at": "2026-10-16T08:43:02+08:00",
   "source": "https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule",
   "entries": [
     {
